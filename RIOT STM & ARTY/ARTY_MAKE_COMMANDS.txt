@@ -1,0 +1,49 @@
+===================================
+   TUTORIAL ARTY 
+===================================
+
+
+---------To compile a bare-metal RISC-V program:-----------
+
+make [PROGRAM=hello] [TARGET=freedom-e310-arty] [CONFIGURATION=debug] software
+
+
+
+
+---------Building an Benchmark Program-----------
+
+make PROGRAM=dhrystone TARGET=coreip-e31-arty LINK_TARGET=ramrodata software
+
+
+Building a benchmark program is slightly special in that certain section is required to be loaded in specific memory region. A specialize linker file has been created for its optimal run.
+
+
+
+
+
+
+---------Uploading to the Target Board-----------
+
+make [PROGRAM=hello] [TARGET=sifive-hifive1] [CONFIGURATION=debug] upload
+
+
+
+
+
+---------Debugging a Target Program-----------
+
+make [PROGRAM=hello] [TARGET=sifive-hifive1] [CONFIGURATION=debug] debug
+
+
+
+---------Cleaning a Target Program Build Directory-----------
+
+make [PROGRAM=hello] [TARGET=sifive-hifive1] [CONFIGURATION=debug] clean
+
+
+
+
+
+
+
+Run make help for more commands.

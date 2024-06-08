@@ -1,0 +1,31 @@
+0 = IO8
+1 = LED0 red || IO9
+2 = LED0 green || IO10
+3 = LED0 blue || IO11 || .mosi
+4 = IO12 || .miso
+5 = IO13 || .sclk
+6
+7
+8
+9 = A1
+10 = A2
+11 = LED2 red || A3
+12 = LED2 green || A4
+13 = LED2 blue
+14 = LED7
+15
+16 = IO0 || UART0 rx
+17 = UART0 tx
+18 = IO2 || UART1 rx
+19 = IO3
+20 = LD1 || IO4
+21 = IO5
+22 = LD1 blue || IO6
+23 = IO7 || UART1 tx
+24
+25
+26 = SS
+27 = MOSI
+28 = MISO
+29 = SCLK
+

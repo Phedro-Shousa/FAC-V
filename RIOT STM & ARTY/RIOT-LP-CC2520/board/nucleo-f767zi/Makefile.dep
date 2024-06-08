@@ -1,0 +1,10 @@
+#ifneq (,$(filter netdev_default,$(USEMODULE)))
+#  USEMODULE += stm32_eth
+#endif
+
+  USEMODULE += cc2520
+  USEMODULE += netdev_ieee802154
+  USEMODULE += netdev_ieee802154_submac
+
+
+include $(RIOTBOARD)/common/nucleo/Makefile.dep

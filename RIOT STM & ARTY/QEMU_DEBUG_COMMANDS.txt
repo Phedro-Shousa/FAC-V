@@ -1,0 +1,20 @@
+===================================
+   TUTORIAL DEBUG EXAMPLE QEMU
+===================================
+
+//On the project .c file directory:
+>make BOARD=hifive1
+>qemu-system-riscv32 -kernel bin/hivive1/...(DIRECTORY).../EXEMPLE.ELF -machine sifive_e -nographic -s -S
+
+
+
+//Num outro terminal abrir debug
+>riscv32-unkown-elf-gdb bin/hifive1/...(DIRECTORY).../EXEMPLE.ELF 
+
+//Inside gdb
+>target remote localhost:1234
+
+//and now your are inside debufg
+//b for breakpoint (bmain.c:26)
+//c continue
+//s step
