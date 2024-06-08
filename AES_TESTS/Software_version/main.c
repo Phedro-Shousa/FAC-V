@@ -1,0 +1,488 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <limits.h>
+
+#include "aes.h"
+#include "ctr.h"
+#include "ciphers.h"
+#include "cbc.h"
+#include "ocb.h"
+#include "ccm.h"
+
+typedef uint32_t u32;
+// TEST AES ENCRYPT
+
+static uint8_t TEST_0_KEY[] = {
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF
+};
+
+static uint8_t TEST_2_KEY[] = {
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1,
+    0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x3,
+};
+static uint8_t TEST_0_INP[] = {
+    0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+};
+static uint8_t TEST_0_ENC[] = {
+    0x37, 0x29, 0xa3, 0x6c, 0xaf, 0xe9, 0x84, 0xff,
+    0x46, 0x22, 0x70, 0x42, 0xee, 0x24, 0x83, 0xf6
+};
+
+static uint8_t TEST_1_KEY[] = {
+    0x23, 0xA0, 0x18, 0x53, 0xFA, 0xB3, 0x89, 0x23,
+    0x65, 0x89, 0x2A, 0xBC, 0x43, 0x99, 0xCC, 0x00
+};
+
+static uint8_t TEST_1_INP[] = {
+    0x11, 0x53, 0x81, 0xE2, 0x5F, 0x33, 0xE7, 0x41,
+    0xBB, 0x12, 0x67, 0x38, 0xE9, 0x12, 0x54, 0x23
+};
+static uint8_t TEST_1_ENC[] = {
+    0xD7, 0x9A, 0x54, 0x0E, 0x61, 0x33, 0x03, 0x72,
+    0x59, 0x0f, 0x87, 0x91, 0xEF, 0xB0, 0xF8, 0x16
+};
+
+static void test_crypto_aes_encrypt(void)
+{
+    cipher_context_t ctx;
+    int err;
+    uint8_t data[AES_BLOCK_SIZE];
+
+
+    err = aes_init(&ctx, TEST_2_KEY, sizeof(TEST_1_KEY));
+    err = aes_encrypt(&ctx, TEST_1_INP, data);
+
+    printf("\nChave: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", ctx.context[i]);
+    }
+    printf("\nInput: ");
+    for (int i = 0; i < sizeof(TEST_1_INP); i++) {
+        printf("%02x", TEST_1_INP[i]);
+    }
+    
+    printf("\nOutput: ");
+    for (int i = 0; i < sizeof(data); i++) {
+        printf("%02x", data[i]);
+    }
+    
+    printf("\n");
+}
+
+
+// TEST CBC ENCRYPT
+/*
+static uint8_t TEST_1_KEY[] = {
+    0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
+};
+static uint8_t TEST_1_KEY_LEN = 16;
+
+static uint8_t TEST_1_IV[16] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+};
+
+static uint8_t TEST_1_PLAIN[] = {
+    0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
+    0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+    0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
+    0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+    0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11,
+    0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
+    0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
+    0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10
+};
+static uint8_t TEST_1_PLAIN_LEN = 64;
+
+static uint8_t TEST_1_CIPHER[] = {
+    0x76, 0x49, 0xab, 0xac, 0x81, 0x19, 0xb2, 0x46,
+    0xce, 0xe9, 0x8e, 0x9b, 0x12, 0xe9, 0x19, 0x7d,
+    0x50, 0x86, 0xcb, 0x9b, 0x50, 0x72, 0x19, 0xee,
+    0x95, 0xdb, 0x11, 0x3a, 0x91, 0x76, 0x78, 0xb2,
+    0x73, 0xbe, 0xd6, 0xb8, 0xe3, 0xc1, 0x74, 0x3b,
+    0x71, 0x16, 0xe6, 0x9e, 0x22, 0x22, 0x95, 0x16,
+    0x3f, 0xf1, 0xca, 0xa1, 0x68, 0x1f, 0xac, 0x09,
+    0x12, 0x0e, 0xca, 0x30, 0x75, 0x86, 0xe1, 0xa7
+};
+static uint8_t TEST_1_CIPHER_LEN = 64;
+
+static void test_encrypt_op(uint8_t* key, uint8_t key_len, uint8_t iv[16],
+    uint8_t* input, uint8_t input_len, uint8_t* output,
+    uint8_t output_len)
+{
+    cipher_t cipher;
+
+    uint8_t data[64];
+  
+    cipher_init(&cipher, CIPHER_AES_128, key, key_len);
+    cipher_encrypt_cbc(&cipher, iv, input, input_len, data);
+
+    printf("\Key:");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", cipher.context.context[i]);
+    }
+    printf("\nIV: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", iv[i]);
+    }
+    printf("\nInput: ");
+    for (int i = 0; i < 64; i++) {
+        printf("%02x", input[i]);
+    }
+    printf("\nOutput: ");
+    for (int i = 0; i < 64; i++) {
+        printf("%02x", output[i]);
+    }
+
+    printf("\n");
+}
+*/
+
+// TEST ECB ENCRYPT
+/*
+static uint8_t TEST_1_KEY[] = {
+    0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
+};
+static uint8_t TEST_1_KEY_LEN = 16;
+
+static uint8_t TEST_1_PLAIN[] = {
+    0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
+    0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+    0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
+    0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+    0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11,
+    0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
+    0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
+    0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10
+};
+static uint8_t TEST_1_PLAIN_LEN = 64;
+
+static uint8_t TEST_1_CIPHER[] = {
+    0x3a, 0xd7, 0x7b, 0xb4, 0x0d, 0x7a, 0x36, 0x60,
+    0xa8, 0x9e, 0xca, 0xf3, 0x24, 0x66, 0xef, 0x97,
+    0xf5, 0xd3, 0xd5, 0x85, 0x03, 0xb9, 0x69, 0x9d,
+    0xe7, 0x85, 0x89, 0x5a, 0x96, 0xfd, 0xba, 0xaf,
+    0x43, 0xb1, 0xcd, 0x7f, 0x59, 0x8e, 0xce, 0x23,
+    0x88, 0x1b, 0x00, 0xe3, 0xed, 0x03, 0x06, 0x88,
+    0x7b, 0x0c, 0x78, 0x5e, 0x27, 0xe8, 0xad, 0x3f,
+    0x82, 0x23, 0x20, 0x71, 0x04, 0x72, 0x5d, 0xd4
+};
+static uint8_t TEST_1_CIPHER_LEN = 64;
+
+static void test_encrypt_op(uint8_t* key, uint8_t key_len, uint8_t* input,
+    uint8_t input_len, uint8_t* output, uint8_t output_len)
+{
+    cipher_t cipher;
+    int len, err, cmp;
+    uint8_t data[64];
+
+    err = cipher_init(&cipher, CIPHER_AES_128, key, key_len);
+    printf("\n%d\n", err);
+
+    len = cipher_encrypt_ecb(&cipher, input, input_len, data);
+    printf("%d\n", len);
+    printf("%d\n", output_len);
+
+    
+    printf("\nKey: ");
+    for (int i = 0; i < TEST_1_KEY_LEN; i++) {
+        printf("%02x", key[i]);
+    }
+    printf("\nInput: ");
+    for (int i = 0; i < TEST_1_PLAIN_LEN; i++) {
+        printf("%02x", input[i]);
+    }
+    printf("\nOutput: ");
+    for (int i = 0; i < TEST_1_CIPHER_LEN; i++) {
+        printf("%02x", output[i]);
+    }
+
+    printf("\n");
+
+}
+*/
+
+//TEST CTR ENCRYPT
+/*
+static uint8_t TEST_1_KEY[] = {
+    0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
+};
+static uint8_t TEST_1_KEY_LEN = 16;
+
+static uint8_t TEST_1_COUNTER[16] = {
+    0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
+    0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
+};
+
+static uint8_t TEST_1_PLAIN[] = {
+    0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
+    0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+    0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c,
+    0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+    0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11,
+    0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
+    0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
+    0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10
+};
+static uint8_t TEST_1_PLAIN_LEN = 64;
+
+static uint8_t TEST_1_CIPHER[] = {
+    0x87, 0x4d, 0x61, 0x91, 0xb6, 0x20, 0xe3, 0x26,
+    0x1b, 0xef, 0x68, 0x64, 0x99, 0x0d, 0xb6, 0xce,
+    0x98, 0x06, 0xf6, 0x6b, 0x79, 0x70, 0xfd, 0xff,
+    0x86, 0x17, 0x18, 0x7b, 0xb9, 0xff, 0xfd, 0xff,
+    0x5a, 0xe4, 0xdf, 0x3e, 0xdb, 0xd5, 0xd3, 0x5e,
+    0x5b, 0x4f, 0x09, 0x02, 0x0d, 0xb0, 0x3e, 0xab,
+    0x1e, 0x03, 0x1d, 0xda, 0x2f, 0xbe, 0x03, 0xd1,
+    0x79, 0x21, 0x70, 0xa0, 0xf3, 0x00, 0x9c, 0xee
+};
+static uint8_t TEST_1_CIPHER_LEN = 64;
+
+static void test_encrypt_op(uint8_t* key, uint8_t key_len, uint8_t ctr[16],
+    uint8_t* input, uint8_t input_len, uint8_t* output,
+    uint8_t output_len)
+{
+    cipher_t cipher;
+    int len, err;
+    uint8_t data[64];
+
+    err = cipher_init(&cipher, CIPHER_AES_128, key, key_len);
+    //printf("%d\n", err);
+    len = cipher_encrypt_ctr(&cipher, ctr, 0, input, input_len, data);
+    //printf("\n%d\n", len);
+    printf("\nCounter: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", ctr[i]);
+    }
+    printf("\nKey: ");
+    for (int i = 0; i < TEST_1_KEY_LEN; i++) {
+        printf("%02x", key[i]);
+    }
+    printf("\nCounter: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", ctr[i]);
+    }
+    printf("\nInput: ");
+    for (int i = 0; i < 64; i++) {
+        printf("%02x", input[i]);
+    }
+    printf("\nOutput: ");
+    for (int i = 0; i < 64; i++) {
+        printf("%02x", output[i]);
+    }
+
+
+    printf("\n");
+}
+*/
+
+//TEST CCM ENCRYPT
+/*
+static const size_t nonce_and_len_encoding_size = 15;
+// RFC3610 Packet Vector #1 
+static const uint8_t TEST_RFC_1_KEY[] = {
+    0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
+    0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF,
+};
+static const size_t TEST_RFC_1_KEY_LEN = 16;
+static const uint8_t TEST_RFC_1_NONCE[] = {
+    0x00, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00, 0xA0,
+    0xA1, 0xA2, 0xA3, 0xA4, 0xA5,
+};
+static const size_t TEST_RFC_1_NONCE_LEN = 13;
+static const size_t TEST_RFC_1_MAC_LEN = 8;
+static const uint8_t TEST_RFC_1_INPUT[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+    0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E,
+};
+static const size_t TEST_RFC_1_INPUT_LEN = 23;
+static const size_t TEST_RFC_1_ADATA_LEN = 8;
+static const uint8_t TEST_RFC_1_EXPECTED[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x58, 0x8C, 0x97, 0x9A, 0x61, 0xC6, 0x63, 0xD2,
+    0xF0, 0x66, 0xD0, 0xC2, 0xC0, 0xF9, 0x89, 0x80,
+    0x6D, 0x5F, 0x6B, 0x61, 0xDA, 0xC3, 0x84, 0x17,
+    0xE8, 0xD1, 0x2C, 0xFD, 0xF9, 0x26, 0xE0,
+};
+static const size_t TEST_RFC_1_EXPECTED_LEN = 39;
+static uint8_t data[512];
+
+static void test_encrypt_op(const uint8_t* key, uint8_t key_len, const uint8_t* adata, size_t adata_len, const uint8_t* nonce, uint8_t nonce_len, const uint8_t* plain, size_t plain_len, const uint8_t* output_expected, size_t output_expected_len, uint8_t mac_length)
+{
+    cipher_t cipher;
+    int len, err;
+    size_t len_encoding = nonce_and_len_encoding_size - nonce_len;
+
+
+    err = cipher_init(&cipher, CIPHER_AES_128, key, key_len);
+    printf("\n%d\n", err);
+    len = cipher_encrypt_ccm(&cipher, adata, adata_len, mac_length, len_encoding, nonce, nonce_len, plain, plain_len, data);
+    printf("\n%d\n", len);
+
+    printf("\nKey: ");
+    for (int i = 0; i < key_len; i++) {
+        printf("%02x", key[i]);
+    }
+    printf("\nAdata: ");
+    for (int i = 0; i < adata_len; i++) {
+        printf("%02x", adata[i]);
+    }
+    printf("\nNonce: ");
+    for (int i = 0; i < nonce_len; i++) {
+        printf("%02x", nonce[i]);
+    }
+    printf("\nInput: ");
+    for (int i = adata_len; i < 31; i++) {
+        printf("%02x", TEST_RFC_1_INPUT[i]);
+    } 
+    printf("\nAdata Output: ");
+    for (int i = 0; i < adata_len; i++) {
+        printf("%02x", TEST_RFC_1_EXPECTED[i]);
+    }
+    printf("\nMessage Output: ");
+    for (int i = adata_len; i < TEST_RFC_1_EXPECTED_LEN - adata_len; i++) {
+        printf("%02x", TEST_RFC_1_EXPECTED[i]);
+    }
+    printf("\nAuthentication Output: ");
+    for (int i = TEST_RFC_1_EXPECTED_LEN - 2*adata_len; i < TEST_RFC_1_EXPECTED_LEN - adata_len; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\nExpected Output: ");
+    for (int i = adata_len; i < TEST_RFC_1_EXPECTED_LEN; i++) {
+        printf("%02x", TEST_RFC_1_EXPECTED[i]);
+    }
+    printf("\n");
+}
+*/
+
+//TEST OCB ENCRYPT
+/*
+// Test vectors from RFC 7253, Appendix A 
+// The key (K) has a fixed value, the tag (MAC) length is 128 bits, and the nonce (N) increments.
+
+ //    K : 000102030405060708090A0B0C0D0E0F
+ 
+static uint8_t TEST_KEY[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+};
+static uint8_t TEST_KEY_LEN = 16;
+
+// Test 2:
+//  N: BBAA99887766554433221101
+//  A: 0001020304050607
+//  P: 0001020304050607
+//  C: 6820B3657B6F615A5725BDA0D3B4EB3A257C9AF1F8F03009
+ 
+
+static uint8_t* TEST_2_KEY = TEST_KEY;
+
+static uint8_t TEST_2_NONCE[] = {
+    0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44,
+    0x33, 0x22, 0x11, 0x01,
+};
+static size_t TEST_2_NONCE_LEN = 12;
+
+static uint8_t TEST_2_INPUT[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+};
+static size_t TEST_2_INPUT_LEN = sizeof(TEST_2_INPUT);
+
+static uint8_t TEST_2_ADATA[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+};
+static size_t TEST_2_ADATA_LEN = sizeof(TEST_2_ADATA);
+
+static uint8_t TEST_2_EXPECTED[] = {
+    0x68, 0x20, 0xB3, 0x65, 0x7B, 0x6F, 0x61, 0x5A,
+    0x57, 0x25, 0xBD, 0xA0, 0xD3, 0xB4, 0xEB, 0x3A,
+    0x25, 0x7C, 0x9A, 0xF1, 0xF8, 0xF0, 0x30, 0x09
+};
+static size_t TEST_2_EXPECTED_LEN = sizeof(TEST_2_EXPECTED);
+
+static uint8_t TEST_2_TAG_LEN = 16;
+
+static uint8_t data[60];
+
+static void test_encrypt_op(uint8_t* key, uint8_t key_len, uint8_t* adata, size_t adata_len, uint8_t* nonce, uint8_t nonce_len, uint8_t* plain, size_t plain_len, uint8_t* output_expected, size_t output_expected_len, uint8_t tag_length)
+{
+    cipher_t cipher;
+    int len, err, cmp;
+
+    err = cipher_init(&cipher, CIPHER_AES_128, key, key_len);
+    len = cipher_encrypt_ocb(&cipher, adata, adata_len, tag_length, nonce, nonce_len, plain, plain_len, data);
+    printf("\nKey: ");
+    for (int i = 0; i < key_len; i++) {
+        printf("%02x", key[i]);
+    }
+    printf("\nNonce: ");
+    for (int i = 0; i < nonce_len; i++) {
+        printf("%02x", nonce[i]);
+    }
+    printf("\nADATA: ");
+    for (int i = 0; i < TEST_2_ADATA_LEN; i++) {
+        printf("%02x", TEST_2_ADATA[i]);
+    }
+    printf("\nInput: ");
+    for (int i = 0; i < TEST_2_INPUT_LEN; i++) {
+        printf("%02x", TEST_2_INPUT[i]);
+    }
+    printf("\nPlain: ");
+    for (int i = 0; i < plain_len; i++) {
+        printf("%02x", plain[i]);
+    }
+    printf("\nData: ");
+    for (int i = 0; i < TEST_2_EXPECTED_LEN; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\nOutput: ");
+    for (int i = 0; i < output_expected_len; i++) {
+        printf("%02x", output_expected[i]);
+    }
+    printf("\n");
+}
+*/
+
+int main(){
+//TEST AES
+    
+   test_crypto_aes_encrypt();
+    
+
+//TEST CBC    
+    /*
+    //test_encrypt_op(TEST_1_KEY, TEST_1_KEY_LEN, TEST_1_IV, TEST_1_PLAIN, TEST_1_PLAIN_LEN, TEST_1_CIPHER, TEST_1_CIPHER_LEN);
+    */
+
+//TEST ECB
+    /*
+    //test_encrypt_op(TEST_1_KEY, TEST_1_KEY_LEN, TEST_1_PLAIN, TEST_1_PLAIN_LEN, TEST_1_CIPHER, TEST_1_CIPHER_LEN);
+    */
+
+//TEST ECB
+    /*
+    uint8_t ctr[16];
+    memcpy(ctr, TEST_1_COUNTER, 16);
+    test_encrypt_op(TEST_1_KEY, TEST_1_KEY_LEN, ctr, TEST_1_PLAIN, TEST_1_PLAIN_LEN, TEST_1_CIPHER, TEST_1_CIPHER_LEN);
+    */
+
+//TEST CCM
+    /*
+    test_encrypt_op(TEST_RFC_1_KEY, TEST_RFC_1_KEY_LEN, TEST_RFC_1_INPUT, TEST_RFC_1_ADATA_LEN, TEST_RFC_1_NONCE, TEST_RFC_1_NONCE_LEN, TEST_RFC_1_INPUT + TEST_RFC_1_ADATA_LEN, TEST_RFC_1_INPUT_LEN, TEST_RFC_1_EXPECTED + TEST_RFC_1_ADATA_LEN, TEST_RFC_1_EXPECTED_LEN - TEST_RFC_1_ADATA_LEN, TEST_RFC_1_MAC_LEN);
+    */
+
+//TEST OCB
+  /*x
+    test_encrypt_op(TEST_2_KEY, TEST_KEY_LEN, TEST_2_ADATA, TEST_2_ADATA_LEN, TEST_2_NONCE, TEST_2_NONCE_LEN, TEST_2_INPUT, TEST_2_INPUT_LEN, TEST_2_EXPECTED, TEST_2_EXPECTED_LEN, TEST_2_TAG_LEN);
+    */
+}

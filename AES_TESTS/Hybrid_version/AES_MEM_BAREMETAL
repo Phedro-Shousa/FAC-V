@@ -1,0 +1,213 @@
+// See LICENSE for license details.
+
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define STR1(x) #x
+#ifndef STR
+#define STR(x) STR1(x)
+#endif
+
+#define CUSTOM_0 0b0001011
+#define CUSTOM_1 0b0101011
+#define CUSTOM_2 0b1011011
+#define CUSTOM_3 0b1111011
+
+#define ROCC_INSTRUCTION(rd , rs1 , rs2 , func7) \
+    __asm__ volatile (".insn r " STR(CUSTOM_0) ", " STR(0x7) ", " STR(func7) ", %0, %1, %2" \
+        : "=r"(rd) \
+        : "r"(rs1), "r"(rs2))
+
+#define ROCC_INSTRUCTION_2(rs1, rs2, func7)                                   \
+  {                                                                                  \
+    __asm__ volatile(                                                                    \
+        ".insn r " STR(CUSTOM_0) ", " STR(0x3) ", " STR(func7) ", x0, %0, %1" \
+        :                                                                            \
+        : "r"(rs1), "r"(rs2));                                                       \
+  }
+
+
+void send_key(uint32_t* key_i){
+  ROCC_INSTRUCTION_2(key_i[0], key_i[1], 0);
+  ROCC_INSTRUCTION_2(key_i[2], key_i[3], 1);
+}
+
+void read_key(uint32_t* key){
+  for(int i = 0; i < 4; i++){
+    ROCC_INSTRUCTION(key[i], i, i, 2);
+  }
+}
+
+void encrypt(uint32_t* address_load, uint32_t* address_store, int size_i){
+  ROCC_INSTRUCTION_2(size_i, 0, 5);
+  ROCC_INSTRUCTION_2(address_load, address_store, 3);
+}
+
+void decrypt(uint32_t* address_load,uint32_t* address_store, int size_i){
+  ROCC_INSTRUCTION_2(size_i, 0, 5);
+  ROCC_INSTRUCTION_2(address_load, address_store, 4);
+}
+
+
+int main(void) {
+
+   __asm__ volatile(
+	"li a0, 0x00018000;"
+	"csrrs x0, mstatus, a0;");
+
+
+//========================KEY UNION INSERT===================
+  char key[16] = "0001020304050607";
+  union key{
+    char key_c[16];
+    uint32_t key_i[4];
+  }key1;
+
+  for(int i = 0; i < 16; i++){
+    key1.key_c[i] = key[i];
+  }
+  printf("\n");
+  printf("KEY\n");
+  printf("Char: ");
+  for(int i = 0; i < 16; i++){
+    printf("%c", key1.key_c[i]);
+  }
+  printf("\n");
+  printf("Int: ");
+  for(int i = 0; i < 4; i++){
+    printf("%08x ", (unsigned int)(key1.key_i[i]));
+  }
+  printf("\n");
+//========================MESSAGE UNION INSERT===================
+   char* message = "1234567890987654";
+
+  int size_c = strlen(message);
+  int size_i = size_c/4;
+  if(size_c%4){
+    size_i++;
+  }
+
+
+  union cipher{
+  char message_c[size_c] ;
+  uint32_t message_i[size_i];
+  }cipher1;
+
+  for(int i = 0; i < size_c; i++){
+    cipher1.message_c[i] = message[i];
+  }
+
+//========================RESULT SIZE===================
+
+
+  int size_result_c = size_c;
+  if(size_result_c%16){
+    size_result_c = (size_c / 16)*16 + 16;
+  }
+  int size_result_i = size_result_c/4;
+
+  union result{
+    char result_c[size_result_c];
+    uint32_t result_i[size_result_i];
+  }result1, result2;
+
+//========================PRINT MESSAGE ===================
+
+  printf("\n");
+  printf("MESSAGE\n");
+  printf("Char: ");
+
+  for(int i = 0; i < size_c; i++){
+    printf("%c", cipher1.message_c[i]);
+  }
+  printf("\n");
+  printf("Int: ");
+  for(int i = 0; i < size_i; i++){
+    printf("%08x ", (unsigned int)(cipher1.message_i[i]));
+  }
+  printf("\n");
+  uint32_t read[4];
+// =================================128===========================
+
+  send_key(key1.key_i);
+  printf("\n");
+  printf("[HW INFO] SEND KEY");
+
+  read_key(read);
+  printf("\n");
+  printf("[HW INFO] READ KEY: ");
+  for(int i = 0; i < 4; i++){
+    printf("%08x ", (unsigned int)(read[i]));
+  }
+
+  printf("\n");
+  printf("\n");
+  printf("BEFORE ENCRYPTED\n");
+  printf("Address M:%08x R: %08x\n", (unsigned int)(cipher1.message_i), (unsigned int)(result1.result_i));
+  printf("Message:\n");
+  for(int i = 0; i < size_i; i++){
+    printf("%08x ", (unsigned int)(cipher1.message_i[i]));
+  }
+  printf("\n");
+  printf("Result:\n");
+  for(int i = 0; i < size_result_i; i++){
+    printf("%08x ", (unsigned int)(result1.result_i[i]));
+  }
+  printf("\n");
+  encrypt(cipher1.message_i, result1.result_i,size_i);
+  printf("\n");
+  printf("AFTER ENCRYPTED\n");
+  printf("Message:\n");
+  for(int i = 0; i < size_i; i++){
+    printf("%08x ", (unsigned int)(cipher1.message_i[i]));
+  }
+  printf("\n");
+  printf("Result:\n");
+  for(int i = 0; i < size_result_i; i++){
+    printf("%08x ", (unsigned int)(result1.result_i[i]));
+  }
+
+
+  printf("\n");
+  printf("\n");
+  printf("BEFORE DECRYPTED\n");
+  printf("Address M:%08x R: %08x\n", (unsigned int)(result1.result_i), (unsigned int)(cipher1.message_i));
+  printf("Message:\n");
+  for(int i = 0; i < size_result_i; i++){
+    printf("%08x ", (unsigned int)(result1.result_i[i]));
+  }
+  printf("\n");
+  printf("Result:\n");
+  for(int i = 0; i < size_i; i++){
+    printf("%08x ", (unsigned int)(result2.result_i[i]));
+  }
+  printf("\n");
+  decrypt(result1.result_i, result2.result_i,size_result_i);
+  printf("\n");
+  printf("AFTER DECRYPTED\n");
+  printf("Message:\n");
+    for(int i = 0; i < size_result_i; i++){
+      printf("%08x ", (unsigned int)(result1.result_i[i]));
+    }
+    printf("\n");
+    printf("Result:\n");
+    for(int i = 0; i < size_i; i++){
+      printf("%08x ", (unsigned int)(result2.result_i[i]));
+    }
+    printf("\n");
+  printf("Char: ");
+  for(int i = 0; i < size_result_c; i++){
+    printf("%c", result2.result_c[i]);
+  }
+
+// ===========================================================
+
+  printf("\n");
+  printf("\n");
+  return 0;
+}
+
+

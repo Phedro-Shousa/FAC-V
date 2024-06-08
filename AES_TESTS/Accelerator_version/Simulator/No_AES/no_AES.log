@@ -1,0 +1,56 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Tue Jul 13 20:58:49 2021
+# Process ID: 55778
+# Current directory: /home/pedro/chameliot-freedom/builds/e300artydevkit
+# Command line: vivado -nojournal -mode batch -source /home/pedro/chameliot-freedom/fpga-shells/xilinx/common/tcl/write_cfgmem.tcl -tclargs arty /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.mcs /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.bit
+# Log file: /home/pedro/chameliot-freedom/builds/e300artydevkit/vivado.log
+# Journal file: 
+#-----------------------------------------------------------
+source /home/pedro/chameliot-freedom/fpga-shells/xilinx/common/tcl/write_cfgmem.tcl
+# set script_program_dir [file dirname [info script]]
+# source [file join $script_program_dir {boards.tcl}]
+## namespace eval ::program::boards {}
+## set ::program::boards::spec [dict create \
+## 	arty            [dict create  iface spix4   size 16   bitaddr 0x0        memdev {n25q128-3.3v-spi-x1_x2_x4}] \
+## 	arty_a7_100     [dict create  iface spix4   size 16   bitaddr 0x0        memdev {s25fl128sxxxxxx0-spi-x1_x2_x4}] \
+## 	vc707           [dict create  iface bpix16  size 128  bitaddr 0x3000000  ] \
+## 	vcu118          [dict create  iface spix8   size 256  bitaddr 0x0        memdev {mt25qu01g-spi-x1_x2_x4_x8}]]
+# if {$argc < 3 || $argc > 4} {
+# 	puts $argc
+# 	puts {Error: Invalid number of arguments}
+# 	puts {Usage: write_cfgmem.tcl board mcsfile bitfile [datafile]}
+# 	exit 1
+# }
+# lassign $argv board mcsfile bitfile datafile
+# if {![dict exists $::program::boards::spec $board]} {
+# 	puts {Unsupported board}
+# 	exit 1
+# }
+# set board [dict get $::program::boards::spec $board]
+# write_cfgmem -format mcs -interface [dict get $board iface] -size [dict get $board size] \
+# 	-loadbit "up [dict get $board bitaddr] $bitfile" \
+# 	-loaddata [expr {$datafile ne "" ? "up 0x400000 $datafile" : ""}] \
+# 	-file $mcsfile -force
+Command: write_cfgmem -format mcs -interface spix4 -size 16 -loadbit {up 0x0 /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.bit} -loaddata {} -file /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.mcs -force
+Creating config memory files...
+Creating bitstream load up from address 0x00000000
+Loading bitfile /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.bit
+Writing file /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.mcs
+Writing log file /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.prm
+===================================
+Configuration Memory information
+===================================
+File Format        MCS
+Interface          SPIX4
+Size               16M
+Start Address      0x00000000
+End Address        0x00FFFFFF
+
+Addr1         Addr2         Date                    File(s)
+0x00000000    0x0021728B    Jul 13 20:58:08 2021    /home/pedro/chameliot-freedom/builds/e300artydevkit/obj/E300ArtyDevKitFPGAChip.bit
+0 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+write_cfgmem completed successfully
+INFO: [Common 17-206] Exiting Vivado at Tue Jul 13 20:59:03 2021...
