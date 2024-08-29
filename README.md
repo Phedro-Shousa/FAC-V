@@ -1,5 +1,10 @@
 # FAC-V: An FPGA-Based AES Coprocessor for RISC-V
 
+This project is an old thesis 2022 project dump and may require additional setup.
+Check project publications: 
+- http://dx.doi.org/10.3390/jlpea12040050
+- http://dx.doi.org/10.3390/jlpea12040050
+
 ## Overview
 
 FAC-V is a project that demonstrates an FPGA-based AES (Advanced Encryption Standard) coprocessor designed for RISC-V processors. The project highlights how FPGA technology can be used to enhance the performance and security of IoT devices through hardware acceleration. This coprocessor can be implemented using both tightly and loosely coupled approaches, offering flexibility and significant performance improvements over software-only solutions.
@@ -12,8 +17,6 @@ FAC-V is a project that demonstrates an FPGA-based AES (Advanced Encryption Stan
 - **Easy integration**: User-friendly API for seamless integration with various IoT operating systems or baremetal applications.
 
 ## Quick Start
-
-This project is an old project dump and may require additional setup. The following instructions provide a basic guide to getting started with FAC-V.
 
 ### Prerequisites
 
